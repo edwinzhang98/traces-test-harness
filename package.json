@@ -1,0 +1,13 @@
+{
+  "name": "traces-pi-harness",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "A pi-based solver harness for the TRACES benchmark.",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.84.3"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}

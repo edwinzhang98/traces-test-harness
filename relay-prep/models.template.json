@@ -1,0 +1,25 @@
+{
+  "providers": {
+    "traces-relay": {
+      "baseUrl": "http://127.0.0.1:18081/v1",
+      "api": "openai-completions",
+      "apiKey": "$TRACES_EPISODE_TOKEN",
+      "models": [
+        {
+          "id": "relay-probe",
+          "name": "Relay probe model",
+          "reasoning": false,
+          "contextWindow": 128000,
+          "maxTokens": 32000,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    }
+  },
+  "_note": "Model-relay template for TRACES Route C (verified with fake_relay.py): point baseUrl at the relay, read the per-episode credential from an env var (resolved at request time, uncached), pick the API convention the relay speaks (openai-completions / openai-responses / anthropic-messages)."
+}

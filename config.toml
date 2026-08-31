@@ -1,0 +1,26 @@
+# traces-pi-harness — final configuration
+# Model access: set OPENAI_API_KEY in the environment (see README "Model access"
+# for switching provider/model or pointing at a custom endpoint).
+
+[run]
+label = "full"
+provider = "openai"          # pi built-in provider; reads $OPENAI_API_KEY
+model = "gpt-5.5"
+thinking = "medium"
+tasks = "all"                # the five practice tasks
+seeds = [0, 1, 2]
+repeat = 1
+timeout = 1200
+deadline = 0
+
+[run.prompts]
+system = "prompts/system.md"
+task = "prompts/task.md"
+
+[run.bridge]                 # bridge guard rails (all on)
+gate = true                  # one-shot pre-submission gate
+dup_warning = true
+repair_note = true
+budget_notes = true
+action_numbers = true
+cache = true                 # identical queries answered from record, uncharged

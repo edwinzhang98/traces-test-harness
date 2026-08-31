@@ -1,0 +1,7 @@
+batches/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+relay-prep/relay.log
+.env
