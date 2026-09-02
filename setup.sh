@@ -15,8 +15,9 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 NODE_VERSION="$(node --version)"
 NODE_MAJOR="$(echo "${NODE_VERSION#v}" | cut -d. -f1)"
-if [ "$NODE_MAJOR" -lt 22 ]; then
-  echo "ERROR: Node $NODE_VERSION found, but >= 22 is required." >&2
+NODE_MINOR="$(echo "${NODE_VERSION#v}" | cut -d. -f2)"
+if [ "$NODE_MAJOR" -lt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 19 ]; }; then
+  echo "ERROR: Node $NODE_VERSION found, but >= 22.19 is required (by the pinned pi 0.84.3)." >&2
   echo "       Upgrade from https://nodejs.org (or via nvm: nvm install 22)." >&2
   exit 1
 fi
@@ -51,19 +52,23 @@ echo "      OK: $HERE/node_modules/.bin/pi"
 
 # --- 4/4  practice environments ----------------------------------------------
 echo "[4/4] Checking practice environments (executable-world-examples)..."
-if [ -d "$HERE/../executable-world-examples" ]; then
+if [ -d "$HERE/vendor/executable-world-examples" ]; then
+  echo "      found: $HERE/vendor/executable-world-examples"
+elif [ -d "$HERE/../executable-world-examples" ]; then
   echo "      found: $HERE/../executable-world-examples"
 elif [ -d "$HERE/executable-world-examples" ]; then
   echo "      found: $HERE/executable-world-examples"
 else
-  echo "      not found, cloning $EXAMPLES_URL ..."
-  if ! git clone "$EXAMPLES_URL" "$HERE/../executable-world-examples"; then
-    echo "ERROR: git clone failed. Clone it manually beside this repo:" >&2
-    echo "       git clone $EXAMPLES_URL" >&2
+  echo "      not found, cloning $EXAMPLES_URL into ./vendor ..."
+  mkdir -p "$HERE/vendor"
+  if ! git clone "$EXAMPLES_URL" "$HERE/vendor/executable-world-examples"; then
+    echo "ERROR: git clone failed. Clone it manually into ./vendor:" >&2
+    echo "       git clone $EXAMPLES_URL vendor/executable-world-examples" >&2
     exit 1
   fi
-  echo "      OK: cloned beside this repo"
+  echo "      OK: cloned into ./vendor/executable-world-examples (gitignored, never modified)"
 fi
 
 echo
 echo "Setup complete. Next: put your key in .env (OPENAI_API_KEY=...) or export it, then run: python3 run_experiment.py"
+echo "Smoke test (one episode, ~1-2 min): python3 run_experiment.py --tasks verify_solutions --seeds 0"

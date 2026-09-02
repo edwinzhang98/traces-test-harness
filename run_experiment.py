@@ -2,13 +2,14 @@
 """Run a batch of experiments, collecting each episode's artifacts and run
 metadata under a single batch directory.
 
-Configuration is declarative by default (one experiment = one TOML, see configs/):
+Configuration is declarative: one run = one TOML (config.toml ships the final
+configuration):
 
-    python3 run_experiment.py --config configs/v1-full.toml
-    python3 run_experiment.py --config configs/v0-full.toml --label v0-rerun
+    python3 run_experiment.py                                   # config.toml, 5 tasks x 3 seeds
+    python3 run_experiment.py --tasks clinical_signal --seeds 0 # one episode
+    python3 run_experiment.py --config other.toml --label trial # another config file
 
-Command-line arguments override the matching keys in the config file. The config
-file can also be skipped entirely and everything passed on the command line.
+Command-line arguments override the matching keys in the config file.
 
 Output layout:
     batches/<label>/<task>-s<seed>-r<rep>/   <- one episode: trajectory/result/pi-session
@@ -118,6 +119,13 @@ def one_run(task, seed, rep, cfg, batch_dir):
                EW_DEADLINE=str(cfg["deadline"] or ""))
     for key, var in BRIDGE_FLAGS.items():
         env[var] = "1" if cfg["bridge"].get(key) else "0"
+    # pi keeps its provider/model configuration (models.json) in an "agent directory",
+    # by default ~/.pi/agent — global user state. Point it at the repo-local pi-agent/
+    # instead, unless the caller already chose one, so nothing outside this repository
+    # is consulted. (Custom endpoints/relays go in pi-agent/models.json, see README.)
+    agent_dir = os.environ.get("PI_CODING_AGENT_DIR") or os.path.join(HERE, "pi-agent")
+    os.makedirs(agent_dir, exist_ok=True)
+    env["PI_CODING_AGENT_DIR"] = agent_dir
 
     t0 = time.time()
     timed_out = False
@@ -172,7 +180,7 @@ def main():
     ap.add_argument("--provider")
     ap.add_argument("--model")
     ap.add_argument("--thinking")
-    ap.add_argument("--prompt", help="task prompt file (path relative to experiment/)")
+    ap.add_argument("--prompt", help="task prompt file (path relative to this repository)")
     ap.add_argument("--system-prompt", help="system prompt file; empty = pi default")
     ap.add_argument("--timeout", type=int, help="wall-clock limit per episode (seconds)")
     ap.add_argument("--deadline", type=int, help="time budget announced to the agent (seconds); 0 = disabled")
