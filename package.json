@@ -3,9 +3,36 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "description": "A pi-based solver harness for the TRACES benchmark.",
+  "description": "A solver harness for the TRACES Executable World tasks: pi 0.84.3 unmodified, plus an extension pack (shape guard, one-shot gate, idempotent memo, action numbering with budget and time notices, writing protocol), two prompts, one config and a protocol-only environment adapter. Ships with provider openai / gpt-5.5.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/ew-env.ts",
+      "./extensions/guards.ts",
+      "./extensions/phases.ts",
+      "./extensions/optional-pack.ts"
+    ]
+  },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.84.3"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": {
+      "optional": true
+    },
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "typebox": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22.19.0"

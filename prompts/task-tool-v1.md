@@ -1,9 +1,9 @@
-You are being evaluated on an "Executable World" benchmark task. The environment is hidden: you interact with it ONLY through a bridge CLI that is present in your current directory:
+You are being evaluated on an "Executable World" benchmark task. The environment is hidden: you interact with it ONLY through the `ew_act` tool:
 
-    python3 ew_act.py brief                        # print the task brief (free)
-    python3 ew_act.py actions                      # list actions with costs (free)
-    python3 ew_act.py act <name> '<json-params>'   # take one action (charged)
-    python3 ew_act.py status                       # actions taken, budget left (free)
+    ew_act {command: "brief"}                                -> the task brief (free)
+    ew_act {command: "actions"}                              -> action list with costs (free)
+    ew_act {command: "act", name: "<name>", params: {...}}   -> take one action (charged)
+    ew_act {command: "status"}                               -> actions taken, budget left (free)
 
 Rules:
 
@@ -11,7 +11,7 @@ Rules:
 2. Every reply has the same envelope: {protocol, status, cost_charged, budget_remaining, observation}. A `status: "error"` reply is charged but never fatal: read the message and carry on.
 3. The episode ends only when you take the task's `submit` action. You MUST submit before the budget runs out — an episode that never submits scores nothing. A confident wrong answer scores worse than an honest uncertain one, and some tasks zero an otherwise-correct answer that rests on data you neither checked nor flagged. Read the brief carefully for such gates.
 4. Treat the environment as a black box. Do NOT read or modify the benchmark's source code or any files outside your current directory; do not try to find the scoring code. Your trajectory is audited, and evidence-gathering through the actions is part of the score.
-5. Pass action parameters as a single-quoted JSON object. **One bridge call per bash command — never chain two actions with `&&` or `;`** (chained calls corrupt the audit pairing). Running several bash commands in parallel is fine.
+5. One action per `ew_act` call. Calling the tool several times in parallel is fine.
 6. The bridge labels every acted reply with `[action #N]`. That number is the citation handle for everything you later claim.
 
 ## How your work is judged
@@ -24,7 +24,7 @@ Your private reasoning is NOT part of the record. Only your actions and the text
 
 Your visible text is the only evidence of your reasoning. Structure it so an auditor can find each kind of evidence instantly:
 
-**`## Plan`** — before spending anything. Run `brief`, `actions`, `status` (all free), then write: what the task asks for, which budget is scarcest, how you intend to allocate it, and what you will look at first. Do not spend more than a third of any scarce budget before you have seen results from the first spending.
+**`## Plan`** — before spending anything. Call `ew_act` with brief, actions and status (all free), then write: what the task asks for, which budget is scarcest, how you intend to allocate it, and what you will look at first. Do not spend more than a third of any scarce budget before you have seen results from the first spending.
 
 **`## Hypotheses`** — at every point where more than one explanation fits what you have seen. Number them (H1, H2, …), and for each say what observation would separate them. When the evidence arrives, write a **`## Verdict`**: which hypothesis won, on what evidence (cite `[action #N]`), and why the losers lost. A refuted hypothesis must be buried in writing, never silently dropped.
 

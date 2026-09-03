@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# One-shot setup: verify toolchain, install the pinned pi CLI locally, fetch the
-# official practice environments. Safe to re-run.
+# One-shot setup: verify the toolchain, install the pinned pi CLI locally, fetch
+# the official practice environments. Safe to re-run.
 set -e
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,7 +44,7 @@ if ! command -v npm >/dev/null 2>&1; then
   echo "ERROR: npm not found on PATH (it ships with Node)." >&2
   exit 1
 fi
-if ! (cd "$HERE" && npm install); then
+if ! npm --prefix "$HERE" install; then
   echo "ERROR: npm install failed. Check your network connection and npm registry access." >&2
   exit 1
 fi
@@ -70,5 +70,6 @@ else
 fi
 
 echo
-echo "Setup complete. Next: put your key in .env (OPENAI_API_KEY=...) or export it, then run: python3 run_experiment.py"
-echo "Smoke test (one episode, ~1-2 min): python3 run_experiment.py --tasks verify_solutions --seeds 0"
+echo "Setup complete."
+echo "Next: choose how the model is reached (README \"Model access\"), then run one episode:"
+echo "  python3 run_experiment.py --tasks corpus_dedup --seeds 0"

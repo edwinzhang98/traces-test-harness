@@ -1,26 +1,74 @@
-# traces-pi-harness — final configuration
-# Model access: set OPENAI_API_KEY in the environment (see README "Model access"
-# for switching provider/model or pointing at a custom endpoint).
+# traces-test-harness — shipped configuration.
+#
+# Three layers, one file: pi is launched unmodified, the extension pack supplies
+# every rule the model can feel, and the adapter only translates the protocol.
+# See README.md for what each switch does.
 
 [run]
-label = "full"
-provider = "openai"          # pi built-in provider; reads $OPENAI_API_KEY
-model = "gpt-5.5"
+label = "traces-run"
+provider = "openai"           # pi provider; OPENAI_API_KEY goes in .env. See README
+model = "gpt-5.5"             #   "Model access" for logins and evaluation relays
 thinking = "medium"
-tasks = "all"                # the five practice tasks
+tasks = "all"                 # the five practice tasks; a comma-separated list also works
 seeds = [0, 1, 2]
 repeat = 1
-timeout = 1200
-deadline = 0
+timeout = 1200                # wall-clock limit per episode (seconds)
+deadline = 0                  # time budget announced to the agent; 0 = no time notices
+
+# The environment adapter: protocol translation only (brief / actions / act /
+# status / meta). Whatever it is called, it is copied into the episode directory
+# as ew_act.py. Swap this line to point at an adapter for another environment.
+bridge_path = "adapters/traces/ew_act.py"
+
+# The extension pack, in load order — the order matters:
+#   ew-env.ts       registers the environment as a native pi tool and declares the
+#                   action metadata;
+#   guards.ts       every rule, and every switch in [run.guards] below;
+#   phases.ts       the strong form of phase gating; loaded AFTER guards.ts so
+#                   that what it archives is the text the model actually saw.
+#                   Inert unless guards.phases_reset is on;
+#   optional-pack.ts  the writing-protocol pack. Inert unless
+#                   guards.optional_pack is on (it ships on, below).
+# phases.ts is listed but switched off below: with its switch off it registers no
+# hook and writes no file, byte-for-byte as if it were not listed at all.
+extensions = [
+  "extensions/ew-env.ts",
+  "extensions/guards.ts",
+  "extensions/phases.ts",
+  "extensions/optional-pack.ts",
+]
+
+# The model sees only these tools: bash/read/write are taken away. ew_phase_done
+# is registered only when guards.phases is on, ew_recall only when
+# guards.phases_reset is on (naming a tool that does not exist is harmless — pi
+# ignores unknown names in the whitelist).
+tools = "ew_act,ew_phase_done,ew_recall"
+
+# Stress instances (adapters/traces/scale.py): empty = off. Scaled task names
+# must then be listed in `tasks` explicitly.
+# scale = "clinical_signal=10,corpus_dedup=5:words=28"
 
 [run.prompts]
-system = "prompts/system.md"
-task = "prompts/task.md"
+system = "prompts/system-v1.md"
+task = "prompts/task-tool-v1.md"
 
-[run.bridge]                 # bridge guard rails (all on)
-gate = true                  # one-shot pre-submission gate
-dup_warning = true
-repair_note = true
-budget_notes = true
-action_numbers = true
-cache = true                 # identical queries answered from record, uncharged
+# Extension pack switches -> EW_GUARD_* read by the extensions above. Each one is
+# injected explicitly into every episode and snapshotted into batch.json.
+# The shipped setting: the eight core rules plus the writing-protocol pack on,
+# the phase mechanism (both forms) off.
+[run.guards]
+shape = true             # parameter-shape guard, checked against the brief's signatures
+gate = true              # one-shot gate in front of irreversible actions
+cache = true             # idempotent actions answered from the episode's own record
+cache_safe = true        # sampling actions never cached; replays labelled as replays
+action_numbers = true    # [action #N] in front of every forwarded action's result
+dup_warning = true       # notice when an identical action is taken again
+repair_note = true       # notice after an error reply
+budget_notes = true      # notices at 50% and 20% of any budget dimension
+phases = false           # phase gate (explore -> decide), weak form: off
+phases_reset = false     # strong form (context reset + pinned briefing + ew_recall): off
+                         #   needs phases = true, extensions/phases.ts listed above,
+                         #   and ew_recall + ew_phase_done in `tools`; the runner
+                         #   refuses to start a batch that has only some of them
+optional_pack = true     # writing-protocol pack (extensions/optional-pack.ts): on
+# explore_frac = 0.5     # only read when phases = true
